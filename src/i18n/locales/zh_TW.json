@@ -1234,6 +1234,8 @@
     "keep_minutes_unit": "請以分鐘為單位輸入（例如 90 分鐘）；調整設定並不會縮短剩餘時間。",
     "lease_detail": "{{name}} · 授權記錄",
     "leases_description": "查詢近期 AI 工具的授權和執行狀態。列表記錄將保留 {{days}} 天。",
+    "long_term_authorization": "長期授權",
+    "long_term_authorization_hint": "此授權在撤銷前或 2100 年到期前持續有效，不受瀏覽器登入過期或伺服器重新啟動影響。取消勾選可使用臨時授權。",
     "max_concurrency": "單次授權最多可同時執行",
     "max_duration": "授權時效上限",
     "minutes_n": "{{count}} 分鐘",

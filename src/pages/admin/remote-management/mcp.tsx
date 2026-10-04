@@ -123,6 +123,8 @@ type MCPSettings = {
   mcp_default_duration_minutes: number;
   mcp_max_duration_minutes: number;
   mcp_max_concurrency: number;
+  long_term_enabled: boolean;
+  long_term_expires_at: string;
   endpoint: string;
 };
 
@@ -2388,6 +2390,7 @@ function MCPAuthorizeDialog({
     { id: string; client_name?: string; client_id?: string; redirect_uri?: string; ready?: boolean }[]
   >([]);
   const [selected, setSelected] = useState<string[]>(prefillNodes);
+  const [longTerm, setLongTerm] = useState(true);
   const [preset, setPreset] = useState<number | "custom">(settings.mcp_default_duration_minutes);
   const [customUnit, setCustomUnit] = useState<DurationUnit>("minutes");
   const [customValue, setCustomValue] = useState("90");
@@ -2514,14 +2517,19 @@ function MCPAuthorizeDialog({
     });
   };
 
-  const durationMinutes = preset === "custom"
-    ? parseDurationInput(customValue, customUnit, settings.mcp_max_duration_minutes).minutes
-    : preset;
-  const durationError = preset === "custom"
-    ? parseDurationInput(customValue, customUnit, settings.mcp_max_duration_minutes).error
-    : durationMinutes != null && durationMinutes > settings.mcp_max_duration_minutes
-      ? "range"
-      : null;
+  const useLongTerm = settings.long_term_enabled === true && longTerm;
+  const durationMinutes = useLongTerm
+    ? settings.mcp_default_duration_minutes
+    : preset === "custom"
+      ? parseDurationInput(customValue, customUnit, settings.mcp_max_duration_minutes).minutes
+      : preset;
+  const durationError = useLongTerm
+    ? null
+    : preset === "custom"
+      ? parseDurationInput(customValue, customUnit, settings.mcp_max_duration_minutes).error
+      : durationMinutes != null && durationMinutes > settings.mcp_max_duration_minutes
+        ? "range"
+        : null;
   const canApproveBase = Boolean(requestID && !missingClient && requestReady && selected.length && durationMinutes && !durationError && !submitting && !denyingID);
   const canSubmit = Boolean(canApproveBase && secret);
 
@@ -2561,6 +2569,7 @@ function MCPAuthorizeDialog({
         body: JSON.stringify({
           target_uuids: selected,
           duration_minutes: durationMinutes,
+          long_term: useLongTerm,
           note,
           password: usePasskey || twoFaEnabled ? undefined : secret,
           otp: usePasskey || !twoFaEnabled ? undefined : secret,
@@ -2958,74 +2967,93 @@ function MCPAuthorizeDialog({
             </Typography>
           </Stack>
         </Box>
-        <Typography sx={{ display: "block", fontSize: 13, mt: 2.5, mb: 1 }}>{t("mcp.duration_label")}</Typography>
-        <Box
-          sx={{
-            display: "flex",
-            gap: { xs: 0.75, sm: 1 },
-            "& > button": {
-              flex: 1,
-              minWidth: 0,
-              height: 36,
-              px: { xs: 0.5, sm: 1.75 },
-              fontSize: { xs: 12, sm: 13 },
-              fontWeight: 400,
-              textTransform: "none",
-              whiteSpace: "nowrap",
-              lineHeight: 1.2,
-            },
-          }}
-        >
-          {MCP_DURATION_PRESETS.map((item) => {
-            const selected = preset === item;
-            const disabled = item > settings.mcp_max_duration_minutes;
-            return (
-              <Button
-                key={item}
-                variant="outlined"
-                disabled={disabled}
-                onClick={() => setPreset(item)}
-                sx={{
-                  borderColor: selected ? LITE_BLUE : "divider",
-                  color: selected ? LITE_BLUE : "text.primary",
-                  bgcolor: selected ? LITE_BLUE_SOFT : "background.paper",
-                }}
-              >
-                {item >= 60 && item % 60 === 0
-                  ? t("mcp.hours_n", { count: item / 60 })
-                  : t("mcp.minutes_n", { count: item })}
-              </Button>
-            );
-          })}
-          <Button
-            variant="outlined"
-            onClick={() => setPreset("custom")}
-            sx={{
-              borderColor: preset === "custom" ? LITE_BLUE : "divider",
-              color: preset === "custom" ? LITE_BLUE : "text.primary",
-              bgcolor: preset === "custom" ? LITE_BLUE_SOFT : "background.paper",
-            }}
-          >
-            {t("mcp.custom")}
-          </Button>
-        </Box>
-        {preset === "custom" ? (
-          <Box sx={{ mt: 1.5, maxWidth: { sm: 260 } }}>
-            <DurationField
-              raw={customValue}
-              unit={customUnit}
-              onRawChange={setCustomValue}
-              onUnitChange={setCustomUnit}
-            />
+        {settings.long_term_enabled === true ? (
+          <Box sx={{ mt: 2.5 }}>
+            <Box component="label" sx={{ display: "flex", alignItems: "center", gap: 1, cursor: "pointer" }}>
+              <Checkbox
+                checked={longTerm}
+                onChange={(_event, checked) => setLongTerm(checked)}
+                size="small"
+                slotProps={{ input: { "aria-describedby": "mcp-long-term-hint" } }}
+                sx={{ p: 0 }}
+              />
+              <Typography sx={{ fontSize: 13 }}>{t("mcp.long_term_authorization")}</Typography>
+            </Box>
+            <Typography id="mcp-long-term-hint" sx={{ mt: 1, fontSize: 12, color: "text.secondary", lineHeight: "20px" }}>
+              {t("mcp.long_term_authorization_hint")}
+            </Typography>
           </Box>
         ) : null}
-        <Typography sx={{ mt: 1.125, fontSize: 12, color: durationError ? "error.main" : "text.secondary", lineHeight: "20px" }}>
-          {durationError
-            ? t("mcp.duration_invalid")
-            : t("mcp.duration_from_confirm", {
-                max: durationText(settings.mcp_max_duration_minutes, t),
-              })}
-        </Typography>
+        <Box hidden={useLongTerm}>
+          <Typography sx={{ display: "block", fontSize: 13, mt: 2.5, mb: 1 }}>{t("mcp.duration_label")}</Typography>
+          <Box
+            sx={{
+              display: "flex",
+              gap: { xs: 0.75, sm: 1 },
+              "& > button": {
+                flex: 1,
+                minWidth: 0,
+                height: 36,
+                px: { xs: 0.5, sm: 1.75 },
+                fontSize: { xs: 12, sm: 13 },
+                fontWeight: 400,
+                textTransform: "none",
+                whiteSpace: "nowrap",
+                lineHeight: 1.2,
+              },
+            }}
+          >
+            {MCP_DURATION_PRESETS.map((item) => {
+              const selected = preset === item;
+              const disabled = item > settings.mcp_max_duration_minutes;
+              return (
+                <Button
+                  key={item}
+                  variant="outlined"
+                  disabled={disabled}
+                  onClick={() => setPreset(item)}
+                  sx={{
+                    borderColor: selected ? LITE_BLUE : "divider",
+                    color: selected ? LITE_BLUE : "text.primary",
+                    bgcolor: selected ? LITE_BLUE_SOFT : "background.paper",
+                  }}
+                >
+                  {item >= 60 && item % 60 === 0
+                    ? t("mcp.hours_n", { count: item / 60 })
+                    : t("mcp.minutes_n", { count: item })}
+                </Button>
+              );
+            })}
+            <Button
+              variant="outlined"
+              onClick={() => setPreset("custom")}
+              sx={{
+                borderColor: preset === "custom" ? LITE_BLUE : "divider",
+                color: preset === "custom" ? LITE_BLUE : "text.primary",
+                bgcolor: preset === "custom" ? LITE_BLUE_SOFT : "background.paper",
+              }}
+            >
+              {t("mcp.custom")}
+            </Button>
+          </Box>
+          {preset === "custom" ? (
+            <Box sx={{ mt: 1.5, maxWidth: { sm: 260 } }}>
+              <DurationField
+                raw={customValue}
+                unit={customUnit}
+                onRawChange={setCustomValue}
+                onUnitChange={setCustomUnit}
+              />
+            </Box>
+          ) : null}
+          <Typography sx={{ mt: 1.125, fontSize: 12, color: durationError ? "error.main" : "text.secondary", lineHeight: "20px" }}>
+            {durationError
+              ? t("mcp.duration_invalid")
+              : t("mcp.duration_from_confirm", {
+                  max: durationText(settings.mcp_max_duration_minutes, t),
+                })}
+          </Typography>
+        </Box>
         <Box sx={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 2, mt: 2.5 }}>
           <Box>
             <Typography sx={{ display: "block", fontSize: 13, mb: 1 }}>

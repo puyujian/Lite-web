@@ -1234,6 +1234,8 @@
     "keep_minutes_unit": "请保留分钟单位，例如 90 分钟；切换不会缩短时长。",
     "lease_detail": "{{name}} · 授权详情",
     "leases_description": "查看近期授权、运行状态和所选服务器。列表默认保留最近 {{days}} 天。",
+    "long_term_authorization": "长期授权",
+    "long_term_authorization_hint": "此授权在撤销前或 2100 年到期前持续有效，不受浏览器登录过期或服务器重启影响。取消勾选可使用临时授权。",
     "max_concurrency": "每次授权最大并发",
     "max_duration": "最长授权时长",
     "minutes_n": "{{count}} 分钟",

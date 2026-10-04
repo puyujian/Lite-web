@@ -1234,6 +1234,8 @@
     "keep_minutes_unit": "90 分のように分単位を維持してください。単位切替で期間は短縮されません。",
     "lease_detail": "{{name}} · 承認の詳細",
     "leases_description": "最近の承認、実行状態、対象サーバーを確認します。記録は {{days}} 日間保持されます。",
+    "long_term_authorization": "長期承認",
+    "long_term_authorization_hint": "この承認は取り消すか 2100 年に期限が切れるまで有効で、ブラウザのログイン期限切れやサーバーの再起動後も継続します。一時的な承認を使うにはチェックを外してください。",
     "max_concurrency": "承認あたりの最大同時実行数",
     "max_duration": "最大期間",
     "minutes_n": "{{count}} 分",

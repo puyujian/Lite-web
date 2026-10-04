@@ -1234,6 +1234,8 @@
     "keep_minutes_unit": "Keep the minutes unit for values such as 90 minutes. Switching units does not shorten the duration.",
     "lease_detail": "{{name}} · authorization details",
     "leases_description": "Recent authorizations, running work, and selected servers. Records are kept for {{days}} days.",
+    "long_term_authorization": "Long-term authorization",
+    "long_term_authorization_hint": "This authorization remains valid until revoked or until it expires in 2100, even after your browser login expires or the server restarts. Uncheck for temporary authorization.",
     "max_concurrency": "Max concurrent operations per authorization",
     "max_duration": "Maximum duration",
     "minutes_n": "{{count}} min",
